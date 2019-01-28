@@ -15,20 +15,20 @@ class Graph(object):
         id = 0
         with open(filename) as f:
             for line in f:
-                dat = [v.strip() for v in line.split(',')]
-                a, b = dat[0], dat[1]
-                w = dat[2] if len(dat) >= 3 else 1
-                if a not in g._name2id:
-                    g._name2id[a] = id
+                edgeinfo = [v.strip() for v in line.split(',')]
+                node1, node2 = edgeinfo[0], edgeinfo[1]
+                w = edgeinfo[2] if len(edgeinfo) >= 3 else 1
+                if node1 not in g._name2id:
+                    g._name2id[node1] = id
                     id += 1
-                if b not in g._name2id:
-                    g._name2id[b] = id
+                if node2 not in g._name2id:
+                    g._name2id[node2] = id
                     id += 1
-                a = g._name2id[a]
-                b = g._name2id[b]
-                g.nodes.add(a)
-                g.nodes.add(b)
-                g.edges.add((a, b, w))
+                node1 = g._name2id[node1]  # igraph requires ids rather than names
+                node2 = g._name2id[node2]
+                g.nodes.add(node1)
+                g.nodes.add(node2)
+                g.edges.add((node1, node2, w))
         return g
 
     def get_networkx(self):
