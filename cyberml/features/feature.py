@@ -36,8 +36,8 @@ class StatsFeaturizer(Featurizer):
 
     def __call__(self, fn):
         name = fn.__name__
-        features = []
         def func(graph):
+            features = []
             graph = self._get_input(graph)
             values = fn(graph)
             for stat in self.stats:

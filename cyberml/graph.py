@@ -42,7 +42,7 @@ class Graph(object):
         if self._igraph is None:
             self._igraph = igraph.Graph()
             self._igraph.add_vertices(range(len(self._name2id)))
+            self._igraph.add_edges([(v1, v2) for v1, v2, w in self.edges])
             for v1, v2, w in self.edges:
                 self._igraph[v1, v2, 'w'] = w
         return self._igraph
-
