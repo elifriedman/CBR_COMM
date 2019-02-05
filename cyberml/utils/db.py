@@ -19,9 +19,9 @@ class DBConnection(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type is None:
-            self.client.close()
             if len(self.commands) > 0:
                 self._check_and_batch(force_run=True)
+            self.client.close()
 
     def _check_and_batch(self, force_run=False):
         if len(self.commands) >= self.batch_every or force_run:
