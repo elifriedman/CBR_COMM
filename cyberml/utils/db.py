@@ -38,9 +38,13 @@ class DBConnection(object):
             return self._check_and_batch()
         return self.client.command(cmd)
 
-    def add_object(self, hash, timestamp, malware):
-        cmd = ("UPDATE Object SET hash='{hash}', timestamp={timestamp}, malware={malware} "
-               "UPSERT WHERE hash='{hash}'".format(hash=hash, timestamp=timestamp, malware=malware))
+    def add_object(self, hash, timestamp, malware=None):
+        if malware is None:
+            params =  "hash='{hash}', timestamp={timestamp}"
+        else:
+            params = "hash='{hash}', timestamp={timestamp}, malware={malware}"
+        cmd = ("UPDATE Object SET " + params +
+               " UPSERT WHERE hash='{hash}'").format(hash=hash, timestamp=timestamp, malware=malware)
         if self.batch:
             self.commands.append(cmd)
             return self._check_and_batch()
@@ -49,14 +53,18 @@ class DBConnection(object):
 
     def add_flow(self, source_ip, source_port, destination_ip, destination_port, object_hash, timestamp, protocol="", malware=True):
         cmd = ("LET $records=(SELECT FROM Object WHERE hash='{object_hash}'); "  # for some reason can't do subquery and need this silly batch query
+               "LET $v1=(SELECT FROM Node WHERE ip='{source_ip}'); "
+               "LET $v2=(SELECT FROM Node WHERE ip='{destination_ip}'); "
                "CREATE EDGE Flow "
-               "FROM(SELECT FROM Node WHERE ip='{source_ip}') "
-               "TO(SELECT FROM Node WHERE ip='{destination_ip}') "
+               "FROM $v1 TO $v2 "
                "SET object = $records[0], protocol='{protocol}', "
                "sourcePort='{source_port}', destinationPort='{destination_port}', "
-               "timestamp={timestamp}".format(source_ip=source_ip, destination_ip=destination_ip,
+               "timestamp={timestamp}; "
+               "UPDATE $records[0] ADD graphnodes = $v1, graphnodes = $v2; ").format(
+                                              source_ip=source_ip, destination_ip=destination_ip,
                                               source_port=source_port, destination_port=destination_port,
-                                              object_hash=object_hash, timestamp=timestamp, protocol=protocol))
+                                              object_hash=object_hash, timestamp=timestamp, protocol=protocol
+                                            )
         self.add_node(source_ip, timestamp)
         self.add_node(destination_ip, timestamp)
         self.add_object(object_hash, timestamp, malware)
