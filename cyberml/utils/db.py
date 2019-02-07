@@ -4,17 +4,22 @@ import logging
 
 
 class DBConnection(object):
-    def __init__(self, batch=False, batch_every=10000):
+    def __init__(self, batch=False, batch_every=10000, db="cyber", user="root", password="root", host="localhost", port=2424):
         self.batch = batch
         self.batch_every = batch_every
         self.commands = []
         self.client = None
+        self.config = {"db": db,
+                       "user": user,
+                       "password": password,
+                       "host": host,
+                       "port": port}
         self.logger = logging.getLogger(self.__class__.__name__)
 
     def __enter__(self):
         if self.client is None:
-            self.client = pyorient.OrientDB(host="localhost", port=2424)
-        self.client.db_open("cyber", "root", "root")
+            self.client = pyorient.OrientDB(host=self.config["host"], port=self.config["port"])
+        self.client.db_open(self.config["db"], self.config["user"], self.config["password"])
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
